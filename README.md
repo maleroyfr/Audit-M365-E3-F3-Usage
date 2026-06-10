@@ -1,6 +1,6 @@
 # Audit-M365-E3-F3-Usage
 
-Audit de l'usage des licences **Microsoft 365 E3, F3 et E5** (y compris les variantes EEA / sans Teams / HUB) via Microsoft Graph.
+Audit de l'usage des licences **Office 365 E1** et **Microsoft 365 E3, F3 et E5** (y compris les variantes EEA / sans Teams / HUB) via Microsoft Graph.
 
 Le script collecte les rapports d'activité Microsoft 365 et produit des fichiers CSV détaillés permettant d'identifier les licences sous-utilisées ou non utilisées.
 
@@ -71,9 +71,9 @@ Le script crée la structure suivante dans le dossier de sortie :
 
 ```
 Audit-Usage-Licences-M365/
-├── Usage_Licences_M365_E3_F3_E5_Detail_<Period>.csv      # Détail par utilisateur
-├── Usage_Licences_M365_E3_F3_E5_Synthese_<Period>.csv    # Synthèse par licence
-├── Usage_Licences_M365_E3_F3_E5_SKU_Audites.csv          # SKUs ciblés et résolus
+├── Usage_Licences_O365_M365_E1_E3_F3_E5_Detail_<Period>.csv      # Détail par utilisateur
+├── Usage_Licences_O365_M365_E1_E3_F3_E5_Synthese_<Period>.csv    # Synthèse par licence
+├── Usage_Licences_O365_M365_E1_E3_F3_E5_SKU_Audites.csv          # SKUs ciblés et résolus
 ├── Rapports-Bruts/                                        # Rapports bruts Graph API (CSV)
 └── Reference-Microsoft/                                   # Référence Microsoft des licences
 ```
@@ -84,7 +84,7 @@ Un enregistrement par utilisateur avec les colonnes suivantes :
 
 **Identité & Licence**
 - Nom complet, UPN, Compte actif, Type utilisateur
-- Licence, Famille de licence (E3/F3/E5), SKU, GUID SKU, Référence SKU
+- Licence, Famille de licence (E1/E3/F3/E5), SKU, GUID SKU, Référence SKU
 - Teams inclus dans le bundle
 
 **Usage global**
@@ -132,10 +132,13 @@ Un enregistrement par type de licence avec les compteurs agrégés :
 
 ## Licences auditées
 
-Le script couvre toutes les variantes Microsoft 365 E3, F3 et E5, y compris :
+Le script couvre les variantes Office 365 E1 et Microsoft 365 E3, F3 et E5, y compris :
 
 | Produit | Famille | Teams inclus |
 |---|---|---|
+| Office 365 E1 | E1 | Oui |
+| Office 365 E1 (no Teams) | E1 | Non |
+| Office 365 E1 EEA (no Teams) | E1 | Non |
 | Microsoft 365 E3 | E3 | Oui |
 | Microsoft 365 E3 EEA (no Teams) | E3 | Non |
 | Microsoft 365 E3 EEA (no Teams) - HUB 500 seats minimum | E3 | Non |

@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-    Microsoft 365 E3 / F3 / E5 license usage audit, including no Teams variants.
+    Office 365 E1 + Microsoft 365 E3 / F3 / E5 license usage audit, including no Teams variants.
 
 .DESCRIPTION
-    This script identifies users assigned with Microsoft 365 E3, F3 or E5 licenses,
+    This script identifies users assigned with Office 365 E1 and Microsoft 365 E3, F3 or E5 licenses,
     including EEA / no Teams / HUB variants, then consolidates Microsoft 365 usage
     reports for Exchange, OneDrive, SharePoint, Teams and Microsoft 365 Apps.
 
@@ -46,12 +46,33 @@ param(
 $ErrorActionPreference = "Stop"
 
 # =========================
-# Target Microsoft 365 SKUs
+# Target Office 365 / Microsoft 365 SKUs
 # =========================
 # The list includes standard SKUs and known no Teams / EEA / HUB variants.
 # Matching is performed by both skuPartNumber and skuId to handle SKU names with spaces or special characters.
 
 $TargetProducts = @(
+    [pscustomobject]@{
+        ProductName           = "Office 365 E1"
+        ExpectedSkuPartNumber = "STANDARDPACK"
+        ExpectedSkuId         = "18181a46-0d4e-45cd-891e-60aabd171b4e"
+        LicenseFamily         = "E1"
+        IncludesTeams         = $true
+    },
+    [pscustomobject]@{
+        ProductName           = "Office 365 E1 (no Teams)"
+        ExpectedSkuPartNumber = "Office_365_E1_(no_Teams)"
+        ExpectedSkuId         = "f8ced641-8e17-4dc5-b014-f5a2d53f6ac8"
+        LicenseFamily         = "E1"
+        IncludesTeams         = $false
+    },
+    [pscustomobject]@{
+        ProductName           = "Office 365 E1 EEA (no Teams)"
+        ExpectedSkuPartNumber = "Office_365_w/o_Teams_Bundle_E1"
+        ExpectedSkuId         = "b57282e3-65bd-4252-9502-c0eae1e5ab7f"
+        LicenseFamily         = "E1"
+        IncludesTeams         = $false
+    },
     [pscustomobject]@{
         ProductName           = "Microsoft 365 E3"
         ExpectedSkuPartNumber = "SPE_E3"
@@ -161,9 +182,9 @@ New-Item -Path $RawFolder -ItemType Directory -Force | Out-Null
 $ReferenceFolder = Join-Path $OutputFolder "Reference-Microsoft"
 New-Item -Path $ReferenceFolder -ItemType Directory -Force | Out-Null
 
-$DetailOutput = Join-Path $OutputFolder "Usage_Licences_M365_E3_F3_E5_Detail_$Period.csv"
-$SummaryOutput = Join-Path $OutputFolder "Usage_Licences_M365_E3_F3_E5_Synthese_$Period.csv"
-$SkuOutput = Join-Path $OutputFolder "Usage_Licences_M365_E3_F3_E5_SKU_Audites.csv"
+$DetailOutput = Join-Path $OutputFolder "Usage_Licences_O365_M365_E1_E3_F3_E5_Detail_$Period.csv"
+$SummaryOutput = Join-Path $OutputFolder "Usage_Licences_O365_M365_E1_E3_F3_E5_Synthese_$Period.csv"
+$SkuOutput = Join-Path $OutputFolder "Usage_Licences_O365_M365_E1_E3_F3_E5_SKU_Audites.csv"
 
 # =========================
 # Graph connection
@@ -247,7 +268,7 @@ function Get-MicrosoftLicensingReference {
     }
     catch {
         Write-Warning "Impossible de télécharger/importer la référence Microsoft : $($_.Exception.Message)"
-        Write-Warning "Le script continue avec le mapping local E3/F3/E5."
+        Write-Warning "Le script continue avec le mapping local E1/E3/F3/E5."
         return @()
     }
 }
@@ -589,7 +610,7 @@ if ($MissingCatalogSkus.Count -gt 0) {
 }
 
 if ($TargetSkus.Count -eq 0) {
-    throw "Aucune licence Microsoft 365 E3/F3/E5 ou variante sans Teams trouvée dans le tenant."
+    throw "Aucune licence Office 365 E1 ou Microsoft 365 E3/F3/E5 (y compris variantes sans Teams) trouvée dans le tenant."
 }
 
 $TargetSkuIds = @($TargetSkus | ForEach-Object { $_.SkuId.ToString() })
@@ -624,7 +645,7 @@ $TenantSkuDisplay | Format-Table -AutoSize
 # Licensed users
 # =========================
 
-Write-Host "Récupération des utilisateurs licenciés Microsoft 365 E3/F3/E5..." -ForegroundColor Cyan
+Write-Host "Récupération des utilisateurs licenciés Office 365 E1 / Microsoft 365 E3/F3/E5..." -ForegroundColor Cyan
 
 $Users = @(
     Get-MgUser -All -Property `
@@ -723,7 +744,7 @@ $LicensedUsers = foreach ($User in $Users) {
     }
 }
 
-Write-Host "Utilisateurs avec licence Microsoft 365 E3/F3/E5 ciblée : $($LicensedUsers.Count)" -ForegroundColor Green
+Write-Host "Utilisateurs avec licence Office 365 E1 / Microsoft 365 E3/F3/E5 ciblée : $($LicensedUsers.Count)" -ForegroundColor Green
 
 # =========================
 # Usage reports
@@ -1134,7 +1155,7 @@ Write-Host ""
 
 Write-Host "Lecture rapide :" -ForegroundColor Yellow
 Write-Host "- Le fichier de détail permet d'analyser utilisateur par utilisateur."
-Write-Host "- Le fichier de synthèse permet de comparer les usages Microsoft 365 E3, F3, E5 et leurs variantes sans Teams."
+Write-Host "- Le fichier de synthèse permet de comparer les usages Office 365 E1 et Microsoft 365 E3, F3, E5, ainsi que leurs variantes sans Teams."
 Write-Host "- Le script valide les SKU avec la référence Microsoft quand le CSV est disponible."
 Write-Host "- Le matching est réalisé par skuPartNumber et par skuId."
 Write-Host "- Pour les bundles sans Teams, l'usage Teams est visible mais non compté comme usage cœur du bundle M365."
