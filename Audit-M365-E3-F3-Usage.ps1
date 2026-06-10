@@ -1032,11 +1032,53 @@ $Results = foreach ($LicensedUser in $LicensedUsers) {
         "Non"
     }
 
+    $LicenseFamilyList = @(
+        ($LicensedUser.LicenseFamilies -split ";") |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { ![string]::IsNullOrWhiteSpace($_) } |
+            Select-Object -Unique
+    )
+
+    $HasOnlyE1LicenseFamily = (
+        $LicenseFamilyList.Count -gt 0 -and
+        @($LicenseFamilyList | Where-Object { $_ -ne "E1" }).Count -eq 0
+    )
+
+    $UsesDesktopApps = @(
+        $AppsWindows,
+        $AppsMac,
+        $AppsOutlook,
+        $AppsWord,
+        $AppsExcel,
+        $AppsPowerPoint
+    ) -contains "Oui"
+
+    $HasFrontlineLikeUsagePattern = (
+        (
+            $AppsWeb -eq "Oui" -or
+            $AppsMobile -eq "Oui" -or
+            $HasExchangeUsage -eq "Oui" -or
+            $HasOneDriveUsage -eq "Oui" -or
+            $HasSharePointUsage -eq "Oui" -or
+            $HasTeamsUsage -eq "Oui"
+        ) -and
+        !$UsesDesktopApps
+    )
+
+    $IsE1ToF3Candidate = (
+        $HasOnlyE1LicenseFamily -and
+        $HasAnyUsage -eq "Oui" -and
+        $HasFrontlineLikeUsagePattern
+    )
+
     $Recommendation = if ($HasAnyUsage -eq "Non") {
         "Aucun usage détecté sur $Period - candidat retrait ou réaffectation, à valider métier"
     }
     elseif ($HasCoreM365Usage -eq "Non" -and $HasTeamsUsage -eq "Oui" -and $LicensedUser.IncludesTeamsInBundle -eq $false) {
         "Usage Teams détecté uniquement, mais Teams n'est pas inclus dans le bundle - ne pas considérer comme usage du bundle M365"
+    }
+    elseif ($IsE1ToF3Candidate) {
+        "Profil E1 orienté web/mobile sans usage Apps desktop - candidat optimisation E1 vers F3, à valider métier/prérequis"
     }
     elseif (($CoreActivitySignals + $AppsActivitySignals) -le 10) {
         "Usage faible sur $Period - candidat optimisation ou changement de licence, à valider métier"
@@ -1060,6 +1102,7 @@ $Results = foreach ($LicensedUser in $LicensedUsers) {
 
         "Usage détecté"                            = $HasAnyUsage
         "Usage cœur Microsoft 365"                 = $HasCoreM365Usage
+        "Candidat optimisation E1 vers F3"         = if ($IsE1ToF3Candidate) { "Oui" } else { "Non" }
         "Dernière activité détectée"               = $LatestActivityDate
         "Score d'activité total"                   = $TotalActivitySignals
         "Score d'activité cœur M365"               = ($CoreActivitySignals + $AppsActivitySignals)
@@ -1136,6 +1179,7 @@ $Summary = $Results |
             "Utilisateurs avec SharePoint"             = @($Group | Where-Object { $_."Usage SharePoint" -eq "Oui" }).Count
             "Utilisateurs avec Teams"                  = @($Group | Where-Object { $_."Usage Teams" -eq "Oui" }).Count
             "Utilisateurs avec Apps M365"              = @($Group | Where-Object { $_."Usage Microsoft 365 Apps" -eq "Oui" }).Count
+            "Candidats optimisation E1 vers F3"        = @($Group | Where-Object { $_."Candidat optimisation E1 vers F3" -eq "Oui" }).Count
             "Candidats usage faible"                   = @($Group | Where-Object { $_."Recommandation" -like "Usage faible*" }).Count
             "Candidats sans usage"                     = @($Group | Where-Object { $_."Recommandation" -like "Aucun usage*" }).Count
             "Teams seul non compté comme usage bundle" = @($Group | Where-Object { $_."Recommandation" -like "Usage Teams détecté uniquement*" }).Count
@@ -1159,6 +1203,7 @@ Write-Host "- Le fichier de synthèse permet de comparer les usages Office 365 E
 Write-Host "- Le script valide les SKU avec la référence Microsoft quand le CSV est disponible."
 Write-Host "- Le matching est réalisé par skuPartNumber et par skuId."
 Write-Host "- Pour les bundles sans Teams, l'usage Teams est visible mais non compté comme usage cœur du bundle M365."
+Write-Host "- Les profils E1 orientés web/mobile sans usage Apps desktop sont marqués comme candidats E1 vers F3."
 Write-Host "- Un utilisateur sans usage détecté doit être validé métier avant retrait de licence."
 Write-Host "- Si les utilisateurs apparaissent anonymisés, vérifier le paramètre de confidentialité des rapports Microsoft 365."
 Write-Host ""

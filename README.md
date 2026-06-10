@@ -116,6 +116,7 @@ Un enregistrement par utilisateur avec les colonnes suivantes :
 
 **Recommandation**
 - Aucun usage détecté → candidat retrait ou réaffectation, à valider métier
+- Profil E1 orienté web/mobile sans usage Apps desktop → candidat optimisation E1 vers F3, à valider métier/prérequis
 - Usage faible → candidat optimisation ou changement de licence, à valider métier
 - Usage Teams uniquement (bundle sans Teams) → non compté comme usage du bundle
 - Usage détecté → conserver ou analyser plus finement
@@ -126,7 +127,7 @@ Un enregistrement par type de licence avec les compteurs agrégés :
 - Nombre total d'utilisateurs
 - Utilisateurs avec usage détecté / sans usage
 - Compteurs par service (Exchange, OneDrive, SharePoint, Teams, Apps)
-- Candidats usage faible / sans usage / Teams seul non compté
+- Candidats optimisation E1 vers F3 / usage faible / sans usage / Teams seul non compté
 
 ---
 
